@@ -1,23 +1,4 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 17.01.2023 19:02:57
-// Design Name: 
-// Module Name: Priority_arbiter
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
+`timescale 1ns / 1ns
 
 
 module Priority_arbiter(
@@ -55,134 +36,125 @@ reg gnt_2 ; // Active high grant to agent 2
 reg gnt_3 ; // Active high grant to agent 3
 reg gnt_4 ; // Active high grant to agent 4
 
-parameter [2:0] IDLE = 3'b000;
-parameter [2:0] GNT0 = 3'b001;
-parameter [2:0] GNT1 = 3'b010;
-parameter [2:0] GNT2 = 3'b011;
-parameter [2:0] GNT3 = 3'b100;
-parameter [2:0] GNT4 = 3'b101;
+reg [4:0] request;
+reg [4:0] next_state;
+reg [4:0] state;
 
-reg [2:0] state, next_state;
-
-always@(req_0 or req_1 or req_2 or req_3 or req_4)
-begin
-case({req_0,req_1,req_2,req_3,req_4})
-           'b00000:next_state=IDLE;
-           'b00001:next_state=GNT4;
-           'b00010:next_state=GNT3;
-           'b00011:next_state=GNT3;
-           'b00100:next_state=GNT2;
-           'b00101:next_state=GNT2;
-           'b00110:next_state=GNT2;
-           'b00111:next_state=GNT2;
-           'b01000:next_state=GNT1;
-           'b01001:next_state=GNT1;
-           'b01010:next_state=GNT1;
-           'b01011:next_state=GNT1;
-           'b01100:next_state=GNT1;
-           'b01101:next_state=GNT1;
-           'b01110:next_state=GNT1;
-           'b01111:next_state=GNT1;
-           'b10000:next_state=GNT0;
-           'b10001:next_state=GNT0;
-           'b10010:next_state=GNT0;
-           'b10011:next_state=GNT0;
-           'b10100:next_state=GNT0;
-           'b10101:next_state=GNT0;
-           'b10110:next_state=GNT0;
-           'b10111:next_state=GNT0;
-           'b11000:next_state=GNT0;
-           'b11001:next_state=GNT0;
-           'b11010:next_state=GNT0;
-           'b11011:next_state=GNT0;
-           'b11100:next_state=GNT0;
-           'b11101:next_state=GNT0;
-           'b11110:next_state=GNT0;
-           'b11111:next_state=GNT0;
-         endcase
-
+// State transition logic
+always @(posedge clock or posedge reset) begin
+    if (reset)
+        state <= 5'b00000; // Reset state to IDLE
+    else
+        state <= next_state;
 end
 
-
-always @ (posedge(clock))
-begin
-case(state)
-IDLE :  begin
-            gnt_0='b0;
-            gnt_1='b0;
-            gnt_2='b0;
-            gnt_3='b0;
-            gnt_4='b0;
-            $display($time,"nano sec there is no request ");
-            break;
-        end
-
-GNT0 :  if  (req_0&&((req_1||~req_1)||(req_2||~req_2)||(req_3||~req_3)||(req_4||~req_4))) begin
-            gnt_0='b1;
-            gnt_1='b0;
-            gnt_2='b0;
-            gnt_3='b0;
-            gnt_4='b0;
-            $display($time,"nano sec req0 is granted ");
-            break;
-            end 
-
-
-GNT1 :   if (req_1&&((req_0||~req_0)||(req_2||~req_2)||(req_3||~req_3)||(req_4||~req_4))) begin
-            gnt_0='b0;
-            gnt_1='b1;
-            gnt_2='b0;
-            gnt_3='b0;
-            gnt_4='b0;
-            $display($time,"nano sec req1 is granted ");
-            break;
-            end 
-
-GNT2 :   if (req_2&&((req_1||~req_1)||(req_0||~req_0)||(req_3||~req_3)||(req_4||~req_4))) begin
-            gnt_0='b0;
-            gnt_1='b0;
-            gnt_2='b1;
-            gnt_3='b0;
-            gnt_4='b0;
-            $display($time,"nano sec req2 is granted ");
-            break;
-
-            end 
-
-            
-GNT3 :   if (req_3&&((req_1||~req_1)||(req_2||~req_2)||(req_0||~req_0)||(req_4||~req_4))) begin
-            gnt_0='b0;
-            gnt_1='b0;
-            gnt_2='b0;
-            gnt_3='b1;
-            gnt_4='b0;
-            $display($time,"nano sec req3 is granted ");
-            break;
-            end 
-
-            
-GNT4 :   if (req_4&&((req_1||~req_1)||(req_2||~req_2)||(req_0||~req_0)||(req_3||~req_3))) begin
-            gnt_0='b0;
-            gnt_1='b0;
-            gnt_2='b0;
-            gnt_3='b0;
-            gnt_4='b1;
-            $display($time,"nano sec req4 is granted ");
-            break;
-             end 
-
-default : $display($time,"nano sec invalid request");
-
-endcase
+// Determine next state
+always @(*) begin
+    case ({req_0, req_1, req_2, req_3, req_4})
+        5'b00000: next_state = 5'b00000; // IDLE
+        5'b00001: next_state = 5'b00001; // GNT4
+        5'b00010: next_state = 5'b00010; // GNT3
+        5'b00011: next_state = 5'b00010; // GNT3
+        5'b00100: next_state = 5'b00100; // GNT2
+        5'b00101: next_state = 5'b00100; // GNT2
+        5'b00110: next_state = 5'b00100; // GNT2
+        5'b00111: next_state = 5'b00100; // GNT2
+        5'b01000: next_state = 5'b01000; // GNT1
+        5'b01001: next_state = 5'b01000; // GNT1
+        5'b01010: next_state = 5'b01000; // GNT1
+        5'b01011: next_state = 5'b01000; // GNT1
+        5'b01100: next_state = 5'b01000; // GNT1
+        5'b01101: next_state = 5'b01000; // GNT1
+        5'b01110: next_state = 5'b01000; // GNT1
+        5'b01111: next_state = 5'b01000; // GNT1
+        5'b10000: next_state = 5'b10000; // GNT0
+        5'b10001: next_state = 5'b10000; // GNT0
+        5'b10010: next_state = 5'b10000; // GNT0
+        5'b10011: next_state = 5'b10000; // GNT0
+        5'b10100: next_state = 5'b10000; // GNT0
+        5'b10101: next_state = 5'b10000; // GNT0
+        5'b10110: next_state = 5'b10000; // GNT0
+        5'b10111: next_state = 5'b10000; // GNT0
+        5'b11000: next_state = 5'b10000; // GNT0
+        5'b11001: next_state = 5'b10000; // GNT0
+        5'b11010: next_state = 5'b10000; // GNT0
+        5'b11011: next_state = 5'b10000; // GNT0
+        5'b11100: next_state = 5'b10000; // GNT0
+        5'b11101: next_state = 5'b10000; // GNT0
+        5'b11110: next_state = 5'b10000; // GNT0
+        5'b11111: next_state = 5'b10000; // GNT0
+        default: next_state = 5'b00000; // IDLE
+    endcase
 end
 
-
-always@(posedge clock)  //for transition of states
-  begin
-  if(reset)
-    state <=IDLE;
-  else
-   state <= next_state;
-  end 
-
+// Output logic
+always @(posedge clock or posedge reset) begin
+    if (reset) begin
+        gnt_0 = 0;
+        gnt_1 = 0;
+        gnt_2 = 0;
+        gnt_3 = 0;
+        gnt_4 = 0;
+    end
+    else begin
+        case (state)
+            5'b00000: begin
+                gnt_0 = 0;
+                gnt_1 = 0;
+                gnt_2 = 0;
+                gnt_3 = 0;
+                gnt_4 = 0;
+                $display($time, "nano sec there is no request");
+            end
+            5'b10000: begin // GNT0
+                gnt_0 = 1;
+                gnt_1 = 0;
+                gnt_2 = 0;
+                gnt_3 = 0;
+                gnt_4 = 0;
+                $display($time, "nano sec req0 is granted");
+            end
+            5'b01000: begin // GNT1
+                gnt_0 = 0;
+                gnt_1 = 1;
+                gnt_2 = 0;
+                gnt_3 = 0;
+                gnt_4 = 0;
+                $display($time, "nano sec req1 is granted");
+            end
+            5'b00100: begin // GNT2
+                gnt_0 = 0;
+                gnt_1 = 0;
+                gnt_2 = 1;
+                gnt_3 = 0;
+                gnt_4 = 0;
+                $display($time, "nano sec req2 is granted");
+            end
+            5'b00010: begin // GNT3
+                gnt_0 = 0;
+                gnt_1 = 0;
+                gnt_2 = 0;
+                gnt_3 = 1;
+                gnt_4 = 0;
+                $display($time, "nano sec req3 is granted");
+            end
+            5'b00001: begin // GNT4
+                gnt_0 = 0;
+                gnt_1 = 0;
+                gnt_2 = 0;
+                gnt_3 = 0;
+                gnt_4 = 1;
+                $display($time, "nano sec req4 is granted");
+            end
+            default: begin
+                gnt_0 = 0;
+                gnt_1 = 0;
+                gnt_2 = 0;
+                gnt_3 = 0;
+                gnt_4 = 0;
+                $display($time, "nano sec invalid request");
+            end
+        endcase
+    end
+end
 endmodule
